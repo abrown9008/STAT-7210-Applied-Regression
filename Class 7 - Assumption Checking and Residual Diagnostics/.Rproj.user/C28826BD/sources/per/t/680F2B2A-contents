@@ -1,0 +1,356 @@
+---
+title: "Evaluating Regression Assumptions and Residual Diagnostics"
+author: "Dr Austin R Brown"
+institute: "Kennesaw State University"
+format: beamer
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T,include=T,warning=FALSE,message=FALSE,tidy=FALSE)
+library(tidyverse)
+```
+
+## Introduction 
+
+Some of the materials in today's lecture were adapted from those
+created by Dr. Taasoobshirazi as well as my former professor,
+Dr. Khalil Shafie (Thank you Drs. S \& T!).
+
+## Introduction
+
+- In the past few classes, we've learned how to fit simple and multiple linear regression models to various datasets.
+
+\vskip 0.10 in
+
+- We also briefly discussed the assumptions necessary in order to perform linear regression analysis:
+
+    1. Approximate linear relationship between the response and explanatory variables
+    2. The errors have a mean of 0 (i.e., $E[\varepsilon_i] = 0$).
+    3. The errors all have a constant variance (i.e., $Var[\varepsilon] = \sigma^2$)
+    4. The errors are independent of each other.
+    5. Basically, 2, 3, and 4 can be summed up as: $\varepsilon_i \sim N(0,\sigma^2)$, $COV[\varepsilon_i,\varepsilon_j]=0\space i\neq j$.
+    
+## Introduction
+
+- Okay, well what happens if those assumptions aren't met and how can we evaluate whether they're met or not?
+
+\vskip 0.10 in
+
+- If the assumptions are only slightly violated, this usually doesn't substantially impact the results. But if there are severe violations, then we can't reasonably rely upon the results insofar as statistical inference is concerned.
+
+\vskip 0.10 in
+
+- Because R, SAS, SPSS, etc., will still all run the regression analyses regardless if the assumptions are violated or not, we can't use the standard output to evaluate model assumptions.
+
+\vskip 0.10 in
+
+- There are several tools and methods we have available to us that are quite useful.
+
+## Residual Analysis
+
+- Since most of our assumptions have to do with the residuals, it is of value to examine the estimated residuals. What is an estimated residual?
+
+$$ \hat{\varepsilon_i} = y_i - \hat{y}_i $$
+
+- Some texts denote the estimated residual as $e_i$. The estimated variance of the residuals is $MSE$:
+
+$$ \frac{\sum_{i=1}^{n}(e-\bar{e})^2}{n-p} = \frac{\sum_{i=1}^{n}e^2}{n-p} = \frac{\sum_{i=1}^{n}(y_i-\hat{y}_i)^2}{n-p} = \frac{SSE}{n-p} = MSE $$
+
+## Residual Analysis
+
+- One very common way of assessing the residuals is by \underline{standardizing} them. The standardized residuals are simply the raw residuals scaled by the square root of $MSE$ (the estimated model standard deviation!).
+
+$$ d_i = \frac{e_i}{\sqrt{MSE}} $$
+
+- If $|d_i| > 3$, this could be evidence that value is an outlier.
+    
+## Residual Analysis
+
+- The one drawback of using the standardized residuals is that using $MSE$ as their variance is actually just an approximation, not their exact variance. 
+
+\vskip 0.10 in
+
+- Before we get into that, recall that the matrix method of calculating our vector of estimated $\hat{\beta}$'s is:
+
+$$ \hat{\beta} = (X^TX)^{-1}X^TY $$
+
+- Then, if we multiply the resulting matrix on the left by the design matrix, $X$, we get our vector of fitted values, $\hat{Y}$:
+
+$$ \hat{Y} = X\hat{\beta} = X(X^TX)^{-1}X^TY $$
+
+## Residual Analysis
+
+- The matrix, $X(X^TX)^{-1}X^T$ is referred to as the "hat matrix" and often denoted as $H$ (my professor used $P_{x}$ since it is a projection matrix, but we don't need to go too deep down that rabbit hole).
+
+\vskip 0.10 in
+
+- If we go through all of the linear algebra, it can be shown that the true variance of the $e$'s is:
+
+$$ Var[e_i] = \sigma^2(1-h_{ii}) $$
+
+- Where $h_{ii}$ is the $i$th diagonal element (along the main diagonal) of $H$ and is $0\leq h_{ii}\leq 1$. 
+
+## Residual Analysis
+
+- Using $MSE$ to estimate $\sigma^2$, the \textit{studentized} residuals are calculated by:
+
+$$ r_i = \frac{e_i}{\sqrt{MSE(1-h_{ii})}} $$
+
+## Residual Analysis
+
+- Another way we can use the residuals to help us potentially identify outliers is by taking the difference between an observed value, $y_i$, and a predicted value obtained from a model containing all the data points except $y_i$, denoted $\hat{y}_{(i)}$.
+
+\vskip 0.10 in
+
+- Why it makes sense to examine this value is because if $y_i$ is really that unusual compared to the other values, the model will be overly influenced by that point and thus, $y_i - \hat{y}_{(i)}$ will be large. 
+
+\vskip 0.10 in
+
+- These residuals are called the "prediction error" residuals (or PRESS residuals).
+
+
+## Residual Analysis
+
+- The PRESS residuals can be calculated using:
+
+$$ e_{(i)} = \frac{e_i}{1-h_{ii}} $$
+
+- Why the above is true is a complicated but very cool proof. 
+
+\vskip 0.10 in
+
+- The standardized PRESS residual works out to be the studentized residual.
+
+
+## Residual Analysis
+
+- The point of all of this is for us to be able to identify points which may detrimental to the fit of our model. 
+
+\vskip 0.10 in
+
+- We can categorize outliers into two types: pure leverage and influential.
+
+\vskip 0.10 in
+
+- A pure leverage point is an extreme value, but it follows the pattern given by the rest of the data. 
+
+\vskip 0.10 in
+
+- An influential point is also an extreme value, but doesn't follow the pattern given by the rest of the data.
+
+## Residual Analysis
+
+```{r,echo=FALSE,include=TRUE,out.width="70%",out.height="80%",fig.align="center"}
+knitr::include_graphics("leverage.jpg")
+```
+
+## Residual Analysis: Leverage Points
+
+- While leverage points may not necessarily seem like they'd cause too many problems, they still can wreak havoc on our parameter estimates, their standard errors, as well as fitted values.
+
+\vskip 0.10 in
+
+- How do we identify leverage points? Recall that for a single $\varepsilon_i$, its variance is:
+
+$$ Var[\varepsilon_i] = \sigma^2(1-h_{ii}) $$
+
+- where $h_{ii}$ is the $i$th element along the main diagonal of the hat matrix, $H = X(X^TX)^{-1}X^{T}$. 
+
+## Residual Analysis: Leverage Points
+
+- We focus on $h_{ii}$ because it can be thought of as a measure of standardized distance.
+
+\vskip 0.10 in
+
+- More specifically, if a particular value (or vector) of $X$ is far away from its mean (or centroid), $h_{ii}$ is going to be large. A large value of $h_{ii}$ will clearly affect the variance of $\varepsilon_i$, and creates a sort of ripple effect.
+
+\vskip 0.10 in
+
+- Traditionally, any value of $h_{ii} > 2p/n$ is considered a leverage point.
+
+## Residual Analysis: Influential Points 
+
+- We can see from the scatterplot example that an influential point, one which has an unusual $X$ and $Y$ value, can pull our fitted line toward it, thusly resulting in poor fit.
+
+\vskip 0.10 in
+
+- We saw how we can assess the effect of a leverage point, to see if it is influential, through model comparison.
+
+\vskip 0.10 in
+
+- We have a variety of measures we can use to make this determination on all points, not just those which are clearly leverage.
+
+## Residual Analysis: Influential Points - Cook's $D$
+
+- For the $i$th observation, Cook's $D$ is defined as:
+
+$$ D_i = \frac{\mathbf{(\hat{\beta}_{(i)} - \hat{\beta})^TX^TX(\hat{\beta}_{(i)} - \hat{\beta})}}{pMSE} $$
+
+- $D_i$ is a standardized distance our vector $\hat{\beta}$ is from a vector of estimated coefficients generated by omitting point $i$, defined here as $\hat{\beta}_{(i)}$. If $D_i > 1$, this means the point is likely influential.
+
+## Residual Analysis: Influential Points - DFBETAS \& DFFITS
+
+- We also rely on two other commonly used measures of influence, $DFBETAS$ and $DFFITS$. Both of these are quite similar, conceptually, to Cook's D.
+
+\vskip 0.10 in
+
+- For $DFBETAS$, we still fit a full model and a model without the $i$th observation, and then compare our $\hat{\beta}$'s. Computationally:
+
+$$ DFBETAS_{j,i} = \frac{\hat{\beta}_j - \hat{\beta}_{j,(i)}}{S^2_{(i)}C_{jj}} $$
+
+- Where $C_{jj}$ is the $j$th diagonal element in the $(X^TX)^{-1}$ matrix. If $|DFBETAS_{j,i}| > 2/\sqrt{n}$, this indicates a likely influential observation.
+
+## Residual Analysis: Influential Points - DFBETAS \& DFFITS
+
+- $DFFITS$ is very similarly constructed. Here, similar to the rationale for the PRESS residuals, we are examining the standardized difference between a fitted value, $\hat{y}_i$, and a fitted value from a model excluding the $i$th observation, $\hat{y}_{(i)}$. Computationally:
+
+$$ DFFITS_i = \frac{\hat{y}_i - \hat{y}_{(i)}}{\sqrt{S^2_{(i)}h_{ii}}} $$
+
+- Traditionally, if $|DFFITS_i| > 2\sqrt{p/n}$, this indicates we may have an influential point.
+
+## A Measure of Model Performance: COVRATIO 
+
+- Cook's D, $DFFITS$, and $DFBETAS$ are all very useful tools for assessing the effect of individual observations on regression coefficient estimation and in turn, the fitted values.
+
+\vskip 0.10 in
+
+- What they don't tell us, however, is overall, how precise are our estimates? Remember, precision is the inverse of variance.
+
+\vskip 0.10 in
+
+- A new measure called $COVRATIO$, solves this problem.
+
+## A Measure of Model Performance: COVRATIO 
+
+- Let's assume we have a vector of $\hat{\beta}$'s. In general, the variance of this vector is the variance-covariance matrix:
+
+$$ Var[\hat{\beta}] = \sigma^2(X^TX)^{-1} $$
+
+- Often, the determinant of a matrix (which is a scalar value) is used as a measure of precision. So we can think of the determinant of the above matrix as a generalized measure of the regression coefficients' variability.
+
+## A Measure of Model Performance: COVRATIO 
+
+- Thus, the logic behind $COVRATIO$ is an extension of those other fit statistics we've already discussed: What is the generalized variance with and without observation $i$?
+
+$$ COVRATIO_i = \frac{\bigg|(X^T_{(i)}X_{(i)})^{-1}S^2_{(i)}\bigg|}{\bigg|(X^TX)^{-1}MSE\bigg|} $$
+
+
+- If $COVRATIO_i > 1 + 3p/n$ or $COVRATIO_i < 1 - 3p/n$, then the $i$th observation is considered influential.
+
+## Treatment of Influential Observations
+
+- So we have a laundry list of ways to see if a point is influential or not. But what do we do when we find one (or more)?
+
+\vskip 0.10 in
+
+- The answer is: it sorta depends. As a general rule, throwing out observations shouldn't be done unless:
+    1. The data point was a typo
+    2. There is justification for why/how this observation from this observational unit doesn't represent the analyzed population of interest. 
+    
+\vskip 0.10 in
+
+- In academic research, if those two conditions aren't met, then we just proceed with the analysis (so long as the assumptions are reasonably met of course).
+
+## Treatment of Influential Observations
+
+- In industry, where prediction is often the primary goal of model building, influential points may be quite detrimental. So what do we do then?
+
+\vskip 0.10 in
+
+- Sometimes influential points are omitted with the justification that they don't represent typically occurring or observed values.
+    - This is part of data preprocessing
+
+\vskip 0.10 in
+
+- Alternatively, we may have to use a different method which is robust to outliers. With robust regression, we have a different distributional assumption on the residuals (Lapalcian, sometimes also called "Double Exponential"). Gradient Boosting Decision Trees (an ML method) also uses a robust algorithm.
+
+## Assumption Checking - Normality 
+
+- Now, part of the reason it is a good idea to perform residual analysis is because it gives us an idea as to whether or not our assumptions of normality and constant variance are going to be reasonably met. 
+
+\vskip 0.10 in
+
+- If we have a big number of outliers, this is a good indication that normality and constant variance may be called into question.
+
+\vskip 0.10 in
+
+- But how do we know this for certain? Let's start with evaluating normality using both a visual method and a testing method.
+
+## Assumption Checking - Normality 
+
+- To visually assess the assumption of normality, there are several techniques we can use, but most commonly we use a Quantile-Quantile (Q-Q) plot.
+
+\vskip 0.10 in
+
+- A Q-Q plot is a graphical method used to compare the theoretical quantiles of our residuals (that is, the expected values they would assume if they followed a normal distribution) to the sample quantiles (the actual values we observed).
+
+\vskip 0.10 in
+
+- If the residuals follow a normal distribution, the points will plot closely to the identity line ($y=x$).
+
+\vskip 0.10 in
+
+- Deviations from the identity line indicate non-normality.
+
+## Assumption Checking - Normality
+
+```{r,echo=FALSE,include=TRUE,out.width="70%",out.height="80%",fig.align="center"}
+knitr::include_graphics("PP Plot.jpg")
+```
+
+
+## Assumption Checking - Normality
+
+- For testing normality using a hypothesis test, there are lots of options available to us, including:
+    1. Kolmogorov-Smirnov
+    2. Shapiro-Wilk
+    3. Anderson-Darling
+    4. Cramer-von Mises
+    5. Lilliefors
+    
+\vskip 0.10 in
+
+- Regardless of test, each has the same null and alternative hypothesis:
+
+$$ H_0: \text{The data follow a normal distribution} $$
+$$ H_1: \text{The data do not follow a normal distribution} $$
+
+
+
+## Assumption Checking - Constant Variance 
+
+- What the "constant variance" assumption is telling us is that as the value of $y_i$ (and consequently, $\hat{y}_i$) changes, its variance stays the same.
+
+\vskip 0.10 in
+
+- As we have learned so far, model variance is a function of the residuals, $e = y_i - \hat{y}_i$. 
+
+\vskip 0.10 in
+
+- So if we plot the residuals versus the $y$'s or $\hat{y}$'s, we should expect to see \underline{no pattern} as a pattern would indicate a relationship between the value of $y$ and the variance.
+
+## Assumption Checking - Constant Variance 
+
+```{r,echo=FALSE,include=TRUE,out.width="70%",out.height="80%",fig.align="center"}
+knitr::include_graphics("Plot Patterns.jpg")
+```
+
+## Assumption Checking - Constant Variance 
+
+- To test the assumption of constant variance, we use the Breusch-Pagan test. Its hypotheses are:
+
+$$ H_0: \text{The model has constant variance} $$
+$$ H_1: \text{The model does not have constant variance} $$
+
+## Conclusion
+
+- In sum, we care about residual diagnostics because the residuals:
+    1. Affect the accuracy of the estimation of our $\beta$'s
+    2. Affect the accuracy of the prediction of our $\hat{y}$'s
+    
+\vskip 0.10 in
+
+- Further, we care about the assumption of normality and constant variance because if these aren't reasonably met:
+    1. Our $F$ and $t$ test statistics, for the omnibus test and for the individual coefficient tests respectively, may not follow the $F$ and $t$ distributions.
+        - So we may be making mistakes in our conclusions since we don't know for certain the distributions of the test statistics!!
+    2. Statistical power (the probability of rejecting $H_0$ when we should reject $H_0$) goes down.

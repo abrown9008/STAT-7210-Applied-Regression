@@ -1,0 +1,138 @@
+## STAT 7210 - Class 1 Code ##
+
+## R as a Calculator ##
+
+## Add ##
+
+2 + 2
+
+## Subtract ##
+
+2 - 2
+
+## Multiply ##
+
+2*2 
+
+## Divide ##
+
+2/2 
+
+## Raise to a Power ##
+
+2^2
+
+## or ##
+
+2**2
+
+## I can save 2 + 2 as "a" ##
+
+a <- 2 + 2
+
+a
+
+## Note R is case sensitive so A and a 
+## are not the same! ##
+
+A
+
+b <- "STAT 7210"
+
+b
+
+## Importing a CSV File ##
+
+## What are the arguments for read.csv? ##
+?read.csv
+
+## Note, if you aren't using an R Project, then you need to 
+## change the filepath to the one where 
+## your HEART.csv file is specifically stored
+## e.g., C://Users//Austin Brown//Desktop//Heart.csv" ##
+
+heart <- read.csv("HEART.csv")
+
+## Importing an XLSX File ##
+
+## Installing the 'readxl' package ##
+
+install.packages('readxl')
+
+## Importing the 'esoph' dataset ##
+
+library(readxl)
+
+esoph <- read_xlsx("esoph.xlsx")
+
+## Checking our HEART data using the 'head' function ##
+
+head(heart)
+tail(heart)
+
+## Checking our HEART data using the 'summary' function ##
+
+summary(heart)
+
+## We can also use the dplyr::glimpse function! ##
+
+## We have to first install the tidyverse package
+## which contains the dplyr package! ##
+
+install.packages('tidyverse')
+
+library(tidyverse)
+
+heart |>
+  glimpse()
+
+## Isolate the AgeAtDeath Variable ##
+
+age_at_death <- heart$AgeAtDeath
+
+## Find the mean of AgeAtDeath ##
+
+mean(heart$AgeAtDeath)
+
+## Summarize AgeAtDeath ##
+
+summary(heart$AgeAtDeath)
+
+## Check the documentation for the mean function ##
+
+?mean
+
+## Try Again Omitting the NA Values ##
+
+mean(age_at_death,na.rm=T)
+
+## Subset last four column of Heart ##
+
+heart_status <- heart |> 
+  select(Chol_Status,BP_Status,
+         Weight_Status,Smoking_Status) 
+
+heart |> 
+  select(Chol_Status,BP_Status,
+         Weight_Status,Smoking_Status) -> heart_status
+
+heart_status1 <- heart[,c("Chol_Status","BP_Status","Weight_Status",
+                          "Smoking_Status")]
+
+## Subset Overweight Participants ##
+
+heart_status_ow <- heart_status |>
+  filter(Weight_Status == 'Overweight')
+
+heart_status_ow1 <- heart_status[
+  which(heart_status$Weight_Status == 'Overweight'),]
+
+## Checking to Make Sure Subset Worked ##
+
+table(heart_status$Weight_Status)
+
+## Probably a better method: ##
+
+heart_status |>
+  group_by(Weight_Status) |>
+  count()

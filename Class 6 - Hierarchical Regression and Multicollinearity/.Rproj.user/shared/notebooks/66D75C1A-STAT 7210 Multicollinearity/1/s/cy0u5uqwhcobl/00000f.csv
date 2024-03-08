@@ -1,0 +1,3 @@
+"0","dt <- readxl::read_xlsx(""Delivery Time Data.xlsx"")"
+"0","dt |>"
+"0","  ggplot(aes(`Number of Cases`,Distance)) + geom_point() + theme_classic()"

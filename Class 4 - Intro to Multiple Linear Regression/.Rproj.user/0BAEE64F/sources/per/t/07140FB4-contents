@@ -1,0 +1,182 @@
+## STAT 7210 - Multiple Linear Regression R Code ## 
+
+## Part I ##
+
+library(tidyverse)
+library(tidymodels)
+
+## Matrix & Vector Operations in R ##
+
+## Multiplication ##
+
+A <- matrix(c(2,3,
+              0,-1,
+              -2,5),byrow=T,ncol=2,nrow=3)
+
+B <- matrix(c(3,-2,
+              0,1),byrow=T,ncol=2,nrow=2)
+
+A
+B
+
+A%*%B
+
+## Transpose ##
+
+At <- t(A)
+
+At
+
+## Inverse ##
+
+A <- matrix(c(2,15,
+              9,-8),byrow=T,ncol=2)
+
+solve(A)
+
+## Identity Matrix ##
+
+round(solve(A)%*%A)
+
+## Advertising Example ##
+
+## Suppose we want to predict our organizations sales using
+## ad expenses for TV ads, radio ads, and newspaper ads? ##
+
+## Read in Data ##
+
+sales <- readxl::read_xlsx("Advertising.xlsx")
+
+## Integrity Check ##
+
+summary(sales)
+
+## Graphical Exploratory Analysis ##
+
+## Old School R Scatterplot Matrix ##
+
+pairs(sales)
+
+## Old School R Correlation Matrix ##
+
+cor(sales)
+
+## Correlation Heat Map ##
+
+library(GGally)
+
+GGally::ggcorr(sales) +
+  ggtitle("Heatmap Correlation Matrix",
+          subtitle = "For Sales Data") +
+  theme(plot.title=element_text(hjust=0.5),
+        plot.subtitle = element_text(hjust=0.5))
+
+## Combo Plot ##
+
+GGally::ggpairs(sales) +
+  ggtitle("More Informative Scatterplot Matrix",
+          subtitle = "For Sales Data") + 
+  theme(plot.title=element_text(hjust=0.5),
+        plot.subtitle=element_text(hjust=0.5))
+
+## Long Way of Estimating Parameters (one time only :) )
+
+## Build X Matrix ##
+
+X <- as.matrix(dplyr::bind_cols(rep(1,nrow(sales)),
+                                sales$TV,sales$Radio,sales$Newspaper))               
+
+## Check ##
+
+X
+
+## Get Rid of Column Names ##
+
+colnames(X) <- c()
+
+## Subset Y vector ##
+
+Y <- as.matrix(sales$Sales)
+
+## Okay...let's go! ##
+
+beta_hat <- solve(t(X)%*%X)%*%t(X)%*%Y
+
+dplyr::bind_cols(c("B0","B1","B2","B3"),beta_hat)
+
+## Shorter Method ##
+
+mod <- lm(Sales~TV+Radio+Newspaper, data=sales)
+
+coef(mod)
+
+## OR! Tidy Method ##
+
+tidymod <- linear_reg() |>
+  set_engine('lm') |>
+  fit(Sales~TV+Radio+Newspaper, data=sales)
+
+tidymod |>
+  broom::tidy()
+
+## Test for the Significance of the Model ##
+
+summary(mod)
+
+mod |>
+  moderndive::get_regression_summaries()
+
+## Still looking for an easy way to get F-stat from tidymod!! ##
+
+## Penguin Data Example ##
+
+## Let's say we want to use bill length and depth as well as flipper length to 
+## predict a penguin's body mass ##
+
+penguins <- palmerpenguins::penguins
+
+## Exploratory Analysis ##
+
+sub_penguins <- penguins |>
+  dplyr::select(body_mass_g,flipper_length_mm,bill_length_mm,bill_depth_mm)
+
+cor(sub_penguins,use="na.or.complete")
+
+sub_penguins |>
+  GGally::ggpairs() +
+  ggtitle("Scatterplot Matrix & Density Plots",
+          subtitle = "For Penguin Data") + 
+  theme(plot.title=element_text(hjust=0.5),
+        plot.subtitle=element_text(hjust=0.5))
+
+GGally::ggcorr(sub_penguins) +
+  ggtitle("Heatmap Correlation Matrix",
+          subtitle = "For Penguin Data") +
+  theme(plot.title=element_text(hjust=0.5),
+        plot.subtitle = element_text(hjust=0.5))
+
+## Fit Model -- Perform Test ##
+
+pen_mod <- lm(body_mass_g~bill_length_mm+bill_depth_mm+
+              flipper_length_mm,data=sub_penguins)
+
+pen_mod |> 
+  moderndive::get_regression_summaries()
+
+## Individual Coefficient Marginal Tests - Sales Data ##
+
+summary(mod)
+
+## Penguin Data ##
+
+summary(pen_mod)
+
+pen_mod |>
+  moderndive::get_regression_table()
+
+## CI for Mean Response of Sales Data ##
+
+mod |> 
+  predict(interval='confidence')
+
+## Fit = y-hat ##

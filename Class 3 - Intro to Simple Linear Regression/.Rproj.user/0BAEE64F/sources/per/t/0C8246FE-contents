@@ -1,0 +1,146 @@
+## STAT 7210 Simple Linear Regression R Code ##
+
+library(tidyverse)
+library(tidymodels)
+
+## Read in Baseball Data ##
+
+baseball <- readxl::read_xlsx("Baseball Data.xlsx")
+
+## Integrity Check ##
+
+summary(baseball)
+
+## Build & Interpret Scatterplot ##
+
+baseball |>
+  ggplot(aes(x = R, y = Wins)) + geom_point() +
+  labs(x = "Runs Scored", y = "Regular Season Wins",
+       title = "Relationship Between Runs Scored and Regular Season Wins",
+       subtitle = "MLB 2009 - 2019 Seasons") + theme_classic()
+
+## Obtain Summary Statistics for Baseball Data ##
+
+baseball |>
+  dplyr::select(Wins,R) |> 
+  rstatix::get_summary_stats(type="common") ## Gets Summary Statistics ##
+
+## Get & Interpret Correlation Coefficient ##
+
+cor(baseball$Wins,baseball$R)
+
+## Fit Simple Linear Regression Model ##
+
+## Traditional Method ##
+
+trad_mod <- lm(Wins~R,data=baseball)
+
+coef(trad_mod)
+
+## Tidymodels Approach ##
+
+tidy_mod <- linear_reg() |>
+  set_engine("lm") |>
+  fit(Wins~R,data=baseball)
+
+tidy_mod |>
+  broom::tidy() |>
+  dplyr::select(term,estimate)
+
+## Another Example Using the mtcars data ##
+
+## Fit a line between MPG and Rear Axle Ratio ##
+
+## We want to predict MPG ##
+
+## Start with a scatterplot ##
+
+data('mtcars')
+
+## Inspect ##
+
+summary(mtcars)
+
+mtcars |>
+  ggplot(aes(x = drat, y = mpg)) + geom_point() +
+  geom_smooth(method='lm',se=F) +
+  labs(x = "Rear Axle Ratio",
+       y = "Miles Per Gallon",
+       title = "Relationship Between MPG & Rear Axle Ratio",
+       subtitle = "Sample of 1973-74 Vehicles") + theme_classic()
+
+## Interpret this plot using the four questions ##
+
+## What's the correlation & how is it interpreted? ##
+
+cor.test(mtcars$drat,mtcars$mpg)
+
+## Obtain Estimates for Beta0 & Beta1. How are they interpreted? ##
+
+car_mod <- lm(mpg~drat,data=mtcars)
+
+coef(car_mod)
+
+tidycar_mod <- linear_reg() |>
+  set_engine("lm") |>
+  fit(mpg~drat,data=mtcars)
+
+tidycar_mod |>
+  broom::tidy() |>
+  dplyr::select(term,estimate)
+
+## Calculating Test Statistics for Regression Coefficients ##
+
+## Baseball Data ##
+
+## Using trad_mod ##
+
+summary(trad_mod)
+
+## Using tidy_mod ##
+
+tidy_mod |>
+  broom::tidy()
+
+## Another Example Using the mtcars data ##
+
+summary(car_mod)
+
+tidycar_mod |>
+  broom::tidy()
+
+## Get Confidence Intervals for Betas ##
+
+## Baseball ##
+
+## Traditional Method ##
+
+confint(trad_mod)
+
+## Tidy Method ##
+
+tidy_mod |>
+  broom::tidy(conf.int=T) |>
+  dplyr::select(term,conf.low,conf.high)
+
+## Cars ##
+
+## Traditional Method ##
+
+confint(car_mod)
+
+## Tidy Method ##
+
+tidycar_mod |>
+  broom::tidy(conf.int=T) |>
+  dplyr::select(term,conf.low,conf.high)
+
+## Plot the Fitted Values ##
+
+baseball |>
+  ggplot(aes(R,Wins)) +
+  geom_point() +
+  geom_smooth(method="lm",fill='red') + 
+  labs(x = "Runs",
+       y = "Regular Season Wins",
+       title = "MLB Wins v Runs Fitted Model") + theme_classic()
