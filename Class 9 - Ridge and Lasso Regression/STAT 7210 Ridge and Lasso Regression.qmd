@@ -1,0 +1,227 @@
+---
+title: "Solving Multicollinearity Problems: Ridge and Lasso Regression"
+author: "Dr Austin R Brown"
+format: beamer
+execute: 
+  echo: true
+  include: true
+  warning: false
+  message: false
+  tidy: false
+---
+
+## Introduction
+
+- Recall from a prior class session that something we have to be mindful of in multiple linear regression (regardless if our goal is prediction or inference) is multicollinearity.
+
+\vskip 0.10 in
+
+- While multicollinearity is not an assumption in the same way that normality and constant variance are (i.e., for inference to be valid), it can still cause us problems in terms of the precision of our coefficient estimates.
+
+\vskip 0.10 in
+
+- Why is this?
+
+## Introduction
+
+- Recall that the variance of an individual regression coefficient estimator is:
+
+$$ Var[\hat{\beta}_j] = \sigma^2VIF_j $$
+
+- where:
+
+$$ VIF_j = \frac{1}{1-R^2_j} $$
+
+## Introduction
+
+- Also recall that for an individual coefficient t-test, our test statistic is computed as:
+
+$$ t = \frac{\hat{\beta}_j}{\sqrt{MSE(VIF_j)}} $$
+
+- So if $VIF_j$ is large, it has an effect on both the precision of our estimates (as variance goes up, precision goes down), as well as the statistical power of our individual coefficient tests.
+    - This is problematic!!
+    
+## Introduction
+
+- So what do we do? Occassionally it may be appropriate to delete predictor variables, but this should really be an exception and not the first solution.
+
+\vskip 0.10 in
+
+- While traditional methods involve scaling and standardizing predictor variables, the modern solution to these problems is by using either \textbf{\underline{Ridge}} or \textbf{\underline{Lasso}} regression.
+
+\vskip 0.10 in
+
+- Let's walk through an example using the \texttt{ISLR::Credit} dataset and then explain what each method does!
+
+## Example: Credit Data
+
+- Suppose we want to predict credit card balances (Balance) using Income, Limit, Rating, and Student Status:
+
+```{r}
+credit <- ISLR::Credit
+credit_mod <- lm(Balance~Income+Limit+Rating+Student,
+                 data=credit)
+```
+
+## Check Assumptions: Normality
+
+- Let's start with a check of normality, first using the QQ-plot:
+
+```{r,eval=F}
+library(ggpubr)
+credit_mod$residuals |>
+  ggqqplot()
+```
+
+## Check Assumptions: Normality
+
+```{r,echo=F}
+library(ggpubr)
+credit_mod$residuals |>
+  ggqqplot()
+```
+
+## Check Assumptions: Normality
+
+- Okay, so it isn't perfect. Not bad, but we definitely have evidence of non-normality. Let's check on the K-S test:
+
+```{r}
+ks.test(rstudent(credit_mod),"pnorm")
+```
+
+- So we have evidence of slight non-normality, so that's something we need to be mindful of!
+    - Let's move on to constant variance!
+    
+## Check Assumptions: Constant Variance
+
+- Let's evaluate constant variance using our scatterplot technique:
+
+\scriptsize
+```{r,eval=F}
+library(moderndive)
+
+credit_mod |>
+  get_regression_points() |>
+  mutate(`Studentized Residuals` = rstudent(credit_mod)) |>
+  ggplot(aes(x=`Balance_hat`,y=`Studentized Residuals`)) + 
+  geom_point() + 
+  geom_hline(yintercept = 3, color='red') +
+  geom_hline(yintercept = -3, color='red') +
+  geom_hline(yintercept = 0, color='black',
+             linetype='dashed') +
+  labs(y="Studentized Residuals",
+       x="Fitted Values") +
+  theme_classic()
+```
+\normalsize
+
+## Check Assumptions: Constant Variance
+
+```{r,echo=F}
+library(moderndive)
+
+credit_mod |>
+  get_regression_points() |>
+  mutate(`Studentized Residuals` = rstudent(credit_mod)) |>
+  ggplot(aes(x=`Balance_hat`,y=`Studentized Residuals`)) + 
+  geom_point() + 
+  geom_hline(yintercept = 3, color='red') +
+  geom_hline(yintercept = -3, color='red') +
+  geom_hline(yintercept = 0, color='black',
+             linetype='dashed') +
+  labs(y="Studentized Residuals",
+       x="Fitted Values") +
+  theme_classic()
+```
+
+## Check Assumptions: Constant Variance
+
+- We very clearly have non-constant variance. But confirming using the Breush-Pagan Test:
+
+```{r}
+library(lmtest)
+
+credit_mod |>
+  bptest()
+```
+
+## Checking Assumptions: Multicollinearity
+
+- Okay, so we have pretty substantial issues with normality and constant variance we need to be aware of.
+
+\vskip 0.10 in
+
+- What about multicollinearity?
+
+\vskip 0.10 in
+
+- Contextually, we know that we probably have some degree of collinearity considering that income and credit limit are typically positively related.
+
+\vskip 0.10 in
+
+- But let's check using the techniques we learned!
+
+## Checking Assumptions: Multicollinearity
+
+```{r}
+library(olsrr)
+
+credit_mod |>
+  ols_vif_tol()
+```
+
+## Ridge Regression
+
+- Since VIF of greater than 10 is considered problematic, these values in excess of 100 are quite severe and something we need to address.
+
+\vskip 0.10 in
+
+- So how do we do it?
+
+\vskip 0.10 in
+
+- One clever technique is by using a method called \textbf{\underline{ridge regression}}.
+
+## Ridge Regression
+
+- Since one of the main issues with multicollinearity is that our $X^TX$ matrix becomes nearly non-invertable, we can add a small constant, $lambda \geq 0$, to the $X^TX$ matrix. This makes our normal equations:
+
+$$(X^TX + \lambda I)\hat{\beta}_{R} = X^TY $$
+
+- Remember, the diagonals of the $(X^TX)^{-1}$ are the $VIF$ values for each of the predictors. So we can sort of think of the diagonals of the $X^TX$ matrix as the inverse of $VIF$.
+    - This implies that if $VIF$ is big that their inverse will be small.
+    
+## Ridge Regression
+
+- So by adding a small constant to the diagonals, we're sort of intentionally preventing multicollinearity. So our ridge regression coefficient estimates will be:
+
+$$ \hat{\beta}_{R} = (X^TX + \lambda I)^{-1}X^TY $$
+
+- Slick solution, right? So what's the tradeoff? Here, we're trading a little bit of bias for a more precise estimate. 
+    - We know how $VIF$ is being "brute forced" downward. How does the ridge regression coefficient estimates become biased?
+    
+## Ridge Regression
+
+$$ E[\hat{\beta}_{R}] = E[(X^TX + \lambda I)^{-1}X^TY] $$
+
+
+$$ = (X^TX + \lambda I)^{-1}X^TE[Y] $$
+
+$$ = (X^TX + \lambda I)^{-1}X^TX\beta \neq \beta$$
+
+- Because the expected value of the estimate does not equal the parameter it is estimating, the estimator is said to be biased.
+
+## Ridge Regression
+
+- What we need to know then is how to choose $\lambda$. The typical procedure we use is to try several different values of $\lambda$ and see at what value our regression coefficients begin to stabilize. 
+
+\vskip 0.10 in
+
+- We typically use a plot called the "ridge trace" to ascertain the value, but can also use built in R functions to help us decide.
+
+\vskip 0.10 in
+
+- Let's see how we do this in R.
+
+## Ridge Regression
+
