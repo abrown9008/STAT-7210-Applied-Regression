@@ -225,3 +225,71 @@ $$ = (X^TX + \lambda I)^{-1}X^TX\beta \neq \beta$$
 
 ## Ridge Regression
 
+- Let's use the \texttt{lm.ridge} function which is part of the \texttt{MASS} package to do this:
+
+```{r}
+library(tidyverse)
+library(MASS)
+ridge <- lm.ridge(Balance~Income+Limit+Rating+Student,
+                 data=credit,lambda=seq(0.01,100,0.01))
+```
+
+## Ridge Regression
+
+- Then, we can plot our ridge trace to visually identify the optimum value of $\lambda$:
+
+```{r,out.height="80%",out.width="75%",fig.align='center'}
+plot(ridge)
+```
+
+## Ridge Regression
+
+- Visually, it looks like maybe around 50-60 is where the estimates begin to stabilize.
+
+\vskip 0.10 in
+
+- We can also estimate our value of $\lambda$ using the \texttt{select} function which is part of the \texttt{MASS} package:
+
+```{r}
+MASS::select(ridge)
+```
+
+
+## Ridge Regression
+
+- So using $\lambda = 1.08$, let's refit the model and check out our coefficient estimates:
+
+\scriptsize
+```{r,eval=F}
+## Let's use the GCV estimator lambda = 1.08 ##
+
+lambda <- 1.08
+
+## Refit Ridge ##
+
+refit_ridge <- lm.ridge(Balance~Income+Limit+Rating+Student,
+                  data=credit,lambda=lambda)
+
+## Get Coefficients ##
+
+round(coef(refit_ridge),4)
+```
+\normalsize
+
+## Ridge Regression
+
+```{r,echo=F}
+## Let's use the GCV estimator lambda = 1.08 ##
+
+lambda <- 1.08
+
+## Refit Ridge ##
+
+refit_ridge <- lm.ridge(Balance~Income+Limit+Rating+Student,
+                  data=credit,lambda=lambda)
+
+## Get Coefficients ##
+
+round(coef(refit_ridge),4)
+```
+
