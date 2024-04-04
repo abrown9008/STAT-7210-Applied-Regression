@@ -194,7 +194,7 @@ $$ y_i = (\beta_0 - \beta_2x^{(k)}) + (\beta_1 + \beta_2)x_{1i} + \varepsilon_i 
 
 - A weight is then assigned to each point in $x_0$'s neighborhood, with those being nearer to $x_0$ having greater weights than those further away. A weighted least squares regression is then performed using the aforementioned weights by finding $\hat{\beta_0}$ and $\hat{\beta_1}$ that minimize:
 
-$$\sum_{i=1}^nw_i(y_i-\beta_0-\beta_2x_i)^2 $$
+$$\sum_{i=1}^nw_i(y_i-\beta_0-\beta_1x_i)^2 $$
 
 ## LOESS
 
