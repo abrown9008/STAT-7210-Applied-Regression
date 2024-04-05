@@ -21,6 +21,30 @@ hardwood |>
   geom_smooth(method='lm',se=F) +
   theme_classic()
 
+ex <- lm(`Tensile Strength`~.,data=hardwood)
+
+## Evaluate Normality ##
+
+## QQ-Plot ##
+
+library(ggpubr)
+
+ex$residuals |>
+  ggqqplot()
+
+ks.test(rstudent(ex),'pnorm')
+
+## Constant Variance ##
+
+ggplot() + geom_point(aes(x=fitted(ex),
+                          y=rstudent(ex))) +
+  theme_classic()
+
+library(lmtest)
+
+ex |>
+  bptest()
+
 ## Okay this is pretty clearly a non-linear relationship. Maybe we try a second
 ## order polynomial model? ##
 
@@ -99,7 +123,8 @@ cars |>
 ## Check out the Scatterplot ##
 
 cars |>
-  ggplot(aes(`Job Tenure`,`Cars Sold`)) + geom_point() + 
+  ggplot(aes(`Job Tenure`,`Cars Sold`)) + 
+  geom_point() + 
   theme_classic()
 
 ## Okay, pretty clear we have a non-linear relationship. Let's try a second order
@@ -267,3 +292,38 @@ s_mod |>
 ## LOESS: ##
 
 1 - loess_sse/sst
+
+## Append the Boston Data ##
+
+boston <- MASS::Boston
+
+## medv ~ rm ##
+
+boston |>
+  ggplot(aes(x=rm,y=medv)) +
+  geom_point() +
+  geom_smooth(method='lm',se=F,color='purple') +
+  theme_classic()
+
+s1 <- 0.1
+s2 <- 0.2
+s3 <- 0.3
+s4 <- 0.4
+s5 <- 0.5
+
+l1 <- loess(medv~rm,data=boston,span=s1)
+l2 <- loess(medv~rm,data=boston,span=s2)
+l3 <- loess(medv~rm,data=boston,span=s3)
+l4 <- loess(medv~rm,data=boston,span=s4)
+l5 <- loess(medv~rm,data=boston,span=s5)
+
+boston |>
+  ggplot(aes(x=rm,y=medv)) +
+  geom_point() +
+  geom_smooth(method='lm',se=F,color='purple') +
+  geom_line(aes(y=fitted(l1)),color='blue') +
+  geom_line(aes(y=fitted(l2)),color='red') +
+  geom_line(aes(y=fitted(l3)),color='green') +
+  geom_line(aes(y=fitted(l4)),color='steelblue') +
+  geom_line(aes(y=fitted(l5)),color='saddlebrown') +
+  theme_classic()
