@@ -299,7 +299,7 @@ sc
 
 ## Forward Selection ##
 
-fp <- olsrr::ols_step_forward_p(fpmod)
+fp <- ols_step_forward_aic(fpmod)
 
 plot(fp)
 
@@ -309,7 +309,7 @@ fp
 
 ## Backward Selection ##
 
-bp <- olsrr::ols_step_backward_p(fpmod)
+bp <- ols_step_backward_aic(fpmod)
 
 plot(bp)
 
@@ -319,7 +319,7 @@ bp
 
 ## Stepwise Selection ##
 
-sp <- olsrr::ols_step_both_p(fpmod)
+sp <- ols_step_both_aic(fpmod)
 
 plot(sp)
 
@@ -329,3 +329,56 @@ sp
 
 ## It suggests the same model as forward selection ##
 
+## Lasso ##
+
+library(glmnet)
+
+## Let's try this with the penguins data ##
+
+## Define Response ##
+
+y <- penguins$body_mass_g
+
+## Define Predictors ##
+
+X <- data.matrix(p1[,c("species","bill_length_mm","bill_depth_mm",
+                       "flipper_length_mm","sex")])
+
+lasso_mod <- cv.glmnet(x=X,y=y,alpha=1)
+
+## What is the best value of our tuning parameter that
+## minimizes MSE? ##
+
+best_lambda <- lasso_mod$lambda.min
+
+best_lambda
+
+## Visualize ##
+
+plot(lasso_mod)
+
+## Obtain Coefficients of Best Model ##
+
+best_model <- glmnet(x=X,y=y,alpha=1,lambda=best_lambda)
+
+coef(best_model)
+
+## So Lasso also suggests using the full model! ##
+
+## However, let's compare the coefficient estimates to that of regular
+## least-squares regression: ##
+
+coef(fpmod)
+
+## Notice something interesting: our categorical predictors are coded
+## differently with glmnet than they are with regular lm ##
+
+## Adjusted R2? ##
+
+var_y <- var(y)
+
+rz <- predict.glmnet(best_model,newx=X,s=best_lambda)
+
+MSE <- sum((y - rz)^2)/(nrow(p1)-6)
+
+1 - MSE/var_y

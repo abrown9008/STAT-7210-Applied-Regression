@@ -240,3 +240,50 @@ $$ BIC_{\text{Schwartz}} = n\log\bigg(\frac{SSR}{n}\bigg) + p\log(n) $$
 3. Repeat steps 2 and 2a with the model obtained from the original step 2a.
 4. Stop when all variables have been removed or when improvements to metric of choice drop below a specified threshold. 
 
+## Compuational Techniques for Variable Selection: Stepwise Selection
+
+- In general, backward and forward selection won't arrive at the same model. They might, but this isn't always the case.
+
+\vskip 0.10 in
+
+- Forward selection tends to select a more parsimonious model whereas backward selection tends to select a more verbose model.
+
+\vskip 0.10 in
+
+- A reasonable thought might be: "Why not take both approaches??"
+    - This is the rationale behind \textit{stepwise} selection, which begins with the same steps as forward selection (starting from null model)
+    
+## Compuational Techniques for Variable Selection: Lasso Regression
+
+- Remember the main benefit of ridge regression was that we were able to shrink the variance of the coefficient estimates by sacrificing a little bit of bias
+    - The bias-variance tradeoff
+    
+\vskip 0.10 in
+
+- However, in ridge regression, we fit a full regression model despite the fact that not all variables may necessarily be relevant or important to include in the model.
+
+\vskip 0.10 in
+
+- This is where \textit{lasso} regression comes into play:
+
+## Computational Techniques for Variable Selection: Lasso Regression
+
+- The idea with lasso regression is that we calculate our $\beta$ coefficients similarly to regular least-squares, but we have another biasing/tuning parameter:
+
+$$ \hat{\beta}_{\text{Lasso}} = \min\Bigg(\sum_{i=1}^n\bigg(y_i-\beta_0-\sum_{j=1}^{p}\beta_jx_{ij}\bigg)^2\Bigg) $$
+
+- Where: 
+
+$$ \sum_{j=1}^{p}|\beta_j|\leq t $$
+
+## Computational Techniques for Variable Selection: Lasso Regression
+
+- How is this different than ridge? In ridge, we shrunk our coefficient estimates toward zero through minimizing variance.
+
+\vskip 0.10 in
+
+- With lasso, our tuning parameter can force some coefficients to be exactly zero, thus taking the benefits of both ridge and variable selection in a single model.
+
+\vskip 0.10 in
+
+- Thus, it is said the lasso results in a \textit{sparse} model compared to ridge.
