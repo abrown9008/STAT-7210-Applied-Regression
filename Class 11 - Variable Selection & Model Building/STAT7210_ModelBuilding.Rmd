@@ -1,0 +1,234 @@
+---
+title: "Variable Selection and Model Building"
+author: "Dr. Austin Brown"
+institute: "Kennesaw State University"
+output:
+  beamer_presentation:
+    theme: "Hannover"
+    colortheme: "crane"
+    fonttheme: "structurebold"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = FALSE, warning = FALSE, message = FALSE, tidy = FALSE)
+```
+
+## Introduction
+
+- Some of the materials used in today's lecture were adapted from those created by Dr. Taasoobshirazi and my former professor, Dr. Khalil Shafie (thanks Drs S \& T!).
+
+## Introduction
+
+- To this point, we have assumed that we, the people actually building the regression models, know that our included predictor variables are important and ought to be included.
+
+\vskip 0.10 in
+
+- Our general process has been is: (1) fit the full model; (2) check all assumptions including residual analysis; (3) perform any necessary transformations; (4) perform all relevant tests (omnibus and individual predictor); (5) reevaluate if necessary.
+
+\vskip 0.10 in
+
+- This is well and good, but what happens if we have a lot of candidate predictor variables, but aren't sure which would be most important to include?
+    - This is a common problem!
+
+## Introduction
+
+- As we've somewhat discussed earlier in the semester, when we're building a regression model, we want as many predictor variables as possible in order to better inform the variability in our outcome variable. 
+
+\vskip 0.10 in
+
+- On the flip side, we want as few regressors as possible seeing as an increase in regressors can also create an issue with multicollinearity, and consequently, an inflated estimate of $\sigma^2$.
+
+\vskip 0.10 in
+
+- Thus, the goal in model building (in all model based methods, not just linear regression) is to balance these two aims to obtain a "best" fitting model.
+    - Note, "best" doesn't have a universally agreed upon meaning. We'll see different ways we can assess what "best" means throughout today's lecture. 
+    
+## Introduction
+
+- Throughout this semester, it has come up many times that a simpler model (one involving fewer predictors) can be preferable to a more complex model.
+
+\vskip 0.10 in
+
+- However, it can be shown that a model which is "underfit," that is, one which has less predictors than the true model at the population level, biases the estimates of the predictors retained in the model as well as the estimate of the variance.
+
+\vskip 0.10 in
+
+- While we can never truly know if we've underfit a model, these real consequences need to be taken into consideration before removing variables from a model. 
+
+## Introduction
+
+- Now on the other hand, and as mentioned, overfitting a model (including more predictors than is necessary/the true population model contains) also has consequences.
+
+\vskip 0.10 in
+
+- Multicollinearity is one of the big issues. As discussed in last class, multicollinearity inflates the variance of our regression coefficient estimates and can resultingly decrease statistical power.
+
+\vskip 0.10 in
+
+- Additionally, the inclusion of unnecessary predictors also takes away degrees of freedom from SSE, which in turn increases our estimate of MSE, which in turn decreases statistical power. 
+
+## Introduction
+
+- So ultimately we're wanting to build a model which does two things: (1) adheres to the principle of parsimony while (2) not leaving out anything important.
+
+\vskip 0.10 in
+
+- Note, the procedures we will discuss do not necessarily yield the same results nor should they be solely relied upon when comparing models. We still have to use contextual information to help inform our decision making.
+
+## Criteria for Model Selection
+
+- As we're comparing different models, what tools do we have to do that? Well, lots! Some that we know, and some that we may not yet be familiar with. 
+
+\vskip 0.10 in
+
+- First up are our old friends $R^2$ and adjusted $R^2$. Recall:
+
+$$ R^2 = \frac{SSR}{SST} $$
+
+- and is interpreted as the proportion of variability in the response explained by our predictors. However, remember that as we add predictors to our model, $R^2$ will increase (because of math reasons).
+
+## Criteria for Model Selection
+
+```{r,include=T,out.width="65%",out.height="60%",fig.cap="Figure 10.1 from Montgomery text"}
+knitr::include_graphics("R2 Plot.jpg")
+```
+
+## Criteria for Model Selection
+
+- So typically, we use the adjusted $R^2$ instead of regular $R^2$ because it captures the true reduction in $SSE$. Recall:
+
+$$ R^2_{\text{Adj}} = 1 - \frac{MSE}{s^2_y} $$
+
+- We traditionally prefer this measure over regular $R^2$ because it doesn't necessarily increase when an additional regressor is added to the model. 
+    - Further, we can think of the rightmost term as the ratio between the marginal and conditional variance estimates, which makes this measure quite informative!
+
+## Criteria for Model Selection
+
+- Another commonly used measure for model comparison is $MSE$. Remember, $MSE$ is:
+
+$$ MSE = \frac{\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}{n - p} = \frac{SSE}{n-p} $$
+
+- So when comparing two models, a smaller $MSE$ implies a smaller deviance between $y_i$ and $\hat{y}_i$ which further suggests that the predictors used in that model yield a better model fit. 
+
+## Criteria for Model Selection
+
+```{r,include=T,out.width="65%",out.height="60%",fig.cap="Figure 10.2 from Montgomery text"}
+knitr::include_graphics("MSE Plot.jpg")
+```
+
+## Criteria for Model Selection
+
+- Another common metric used to compare competing models is called Mallows's $C_p$. This measure is defined as:
+
+$$ C_p = \frac{SSR_{p-1}}{MSE_{p}} - n + 2p $$
+
+- $C_p$ is basically a measure of bias, comparing the ratio of $SSR$ in a model with $p-1$ $\beta$'s to the $MSE$ of a model with the full set of $p$ $\beta$'s, penalizing for the number of predictors. Smaller values are preferable to larger values when comparing two models. 
+
+\vskip 0.10 in
+
+- If we see $C_p > p$ or $C_p < 0$, then this implies the presence of bias, either due to overfitting or possibly underfitting. 
+
+## Criteria for Model Selection
+
+- Another metric that we've seen before is use of the PRESS residuals. Recall, a PRESS residual is:
+
+$$ PRESS_i = y_i - \hat{y}_{(i)} $$
+
+- The much more commonly used PRESS statistic is used to compare models, especially their ability to predict new observations.
+
+$$ PRESS_p = \sum_{i=1}^{n}(y_i - \hat{y}_{(i)})^2 = \sum_{i=1}^{n}\bigg(\frac{e_i}{1-h_{ii}}\bigg)^2 $$
+
+## Criteria for Model Selection
+
+- Two other popular metrics for comparing models are the Akaike Information Criterion (AIC) and the Bayesian Information Criterion (BIC). 
+
+\vskip 0.10 in
+
+- As their names imply, they use information (via the likelihood, which is a function of the random sample where all of the information about a sample is contained...you'll learn more about this in math stats).
+
+$$ AIC = 2p + n\log\bigg(\frac{SSR}{n}\bigg) $$
+
+$$ BIC_{\text{Schwartz}} = n\log\bigg(\frac{SSR}{n}\bigg) + p\log(n) $$
+$$ BIC_{\text{Sawa}} = n\log\bigg(\frac{SSE}{n}\bigg) + 2(p+2)q - 2q^2 $$
+
+- where $q = n\si
+
+- When comparing two competing models, those with lower AIC/BIC are preferable to those with greater AIC/BIC.
+
+## Computational Techniques for Variable Selection
+
+- Typically, when we have a large pool of predictors to select from, it is quite inefficient for us to manually build a bunch of different models and compare all of the metrics by hand (computer programming 101: less code is preferable to more code or more colloquially it's better to be lazy haha).
+
+\vskip 0.10 in
+
+- There are a couple of common techniques we can use in order to make the computer build models for us, calculate all of the comparative metrics, and then give us some output that we can evaluate.
+
+\vskip 0.10 in
+
+- The first is called "all possible regressions," and does exactly what it sounds like it does. If we have $K$ predictors (assuming $\beta_0$ is included in the model), then there are $2^K$ possible regression equations.
+
+## Computational Techniques for Variable Selection
+
+- Let's use the Cement data to see how this works.
+
+## Computational Techniques for Variable Selection
+
+- All possible regressions is a pretty useful tool for model selection. It's primary limitation, however, is computational efficiency (even a relatively small number of variables, like 30, would generate over one billion regressions).
+
+\vskip 0.10 in
+
+- So we need a more computationally efficient way of including variables in the model that doesn't involve fitting every single regression model possible.
+
+\vskip 0.10 in
+
+- This is where, forward, backward, and stepwise variable selection come into play.
+
+## Computational Techniques for Variable Selection: Forward
+
+- Forward selection is aptly named: it adds variables into the model which most significantly contribute to the model, as assessed by a full versus reduced $F$ test (sometimes called a "partial $F$ test").
+
+\vskip 0.10 in
+
+- Variables are added until the p-value associated with the partial $F$ test exceeds some value.
+
+\vskip 0.10 in
+
+- Let's see how this works using the Cement data in R.
+
+## Computational Techniques for Variable Selection
+
+- Alternatively, we could fit a full model and have variables removed which have the smallest partial $F$ statistic.
+
+\vskip 0.10 in
+
+- In this case, an $F$ statistic is calculated for all variables as if it were the last variable entered into the model (this way we can calculate its contribution, given all the other variables are already in the model).
+
+\vskip 0.10 in
+
+- Let's see what we get using this method in R using the Cement data.
+
+## Computational Techniques for Variable Selection
+
+- Okay so in both of these cases, we ended up effectively the same result. But this isn't always the case and we need to be aware of the drawbacks of both approaches.
+
+\vskip 0.10 in
+
+- Both approaches have the issue of variable finality meaning that, for forward selection, once a variable is in, it's in. For backward selection, once a variable is out, it's out. 
+    - This is problematic because the tests used for variable consideration consider the effect of a candidate variable in the presence of all others already in the model.
+    
+\vskip 0.10 in
+
+- So we could be missing out on an important relationship and possibly be biasing our results as well.
+
+## Computational Techniques for Variable Selection
+
+- This is where stepwise regression comes into play. Stepwise regression basically does what forward and backward selection do simultaneously.
+
+\vskip 0.10 in
+
+- It starts off as forward selection to get one variable into the model. But as the process continues, variables already in the model can be dropped or re-added as the algorithm proceeds.
+
+\vskip 0.10 in
+
+- Let's see how to do this in R!
+
