@@ -134,7 +134,8 @@ ks.test(rstandard(new_mod),'pnorm')
 
 ## Constant Variance ##
 
-ggplot() + geom_point(aes(fitted(new_mod),rstudent(new_mod))) +
+ggplot() + 
+  geom_point(aes(fitted(new_mod),rstudent(new_mod))) +
   theme_classic()
 
 library(lmtest)
@@ -166,7 +167,8 @@ new_mod |>
 ## First Select Variables ##
 
 p1 <- penguins |>
-  dplyr::select(body_mass_g,species,bill_length_mm,bill_depth_mm,
+  dplyr::select(body_mass_g,species,bill_length_mm,
+                bill_depth_mm,
                 flipper_length_mm,sex)
 
 fpmod <- lm(body_mass_g~.,data=p1)
@@ -232,7 +234,8 @@ ks.test(rstudent(fpmod),'pnorm')
 
 ## Constant Variance ##
 
-ggplot() + geom_point(aes(fitted(fpmod),rstudent(fpmod))) +
+ggplot() + 
+  geom_point(aes(fitted(fpmod),rstudent(fpmod))) +
   theme_classic()
 
 fpmod |>
