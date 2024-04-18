@@ -91,7 +91,7 @@ c(MSE,RMSE)
 
 ## MAE ##
 
-MAE <- abs(pv$Observed - pv$Prediction)/nrow(pv)
+MAE <- sum(abs(pv$Observed - pv$Prediction))/nrow(pv)
 
 MAE
 
